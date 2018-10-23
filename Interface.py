@@ -2,6 +2,7 @@
 
 from tkinter import *
 from string import ascii_uppercase
+import sys
 
 class Main_window(Frame):
     counter = 0
@@ -115,7 +116,7 @@ class Main_window(Frame):
             x = event.y
             y = y // self.square_size + 1
             x = x // self.square_size + 1
-            letterx = ascii_uppercase[x]
+
             if self.lastPlayer == 0:
                 draw_cross(y, x)
                 self.lastPlayer = 1
@@ -149,7 +150,7 @@ class Main_window(Frame):
         grid_canvas.bind("<Button-1>", mouse_click)
 
     def client_exit(self):
-        exit()
+        sys.exit()
 
 
 
