@@ -116,6 +116,7 @@ class Main_window(Frame):
             x = event.y
             y = y // self.square_size + 1
             x = x // self.square_size + 1
+            letterx = ascii_uppercase[x]
 
             if self.lastPlayer == 0:
                 draw_cross(y, x)
