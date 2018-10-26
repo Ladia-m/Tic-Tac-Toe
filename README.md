@@ -1,4 +1,4 @@
-# Tic-Tac-Toe
+# Connect five
 This is my learning project. The goal is to create environment and AI for playing tic-tac-toe.
 
 needed modules for running:
