@@ -1,4 +1,4 @@
-#!/usr/bin/env Python
+#!/usr/bin/env python
 import os
 from tkinter import *
 from string import ascii_uppercase
