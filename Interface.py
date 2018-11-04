@@ -78,7 +78,7 @@ class MainWindow(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
         self.master = master
-        self.grid(pady=20)
+        self.grid(pady=5)
         self.cell_size = 25
         self.controller = CFControl(self.master, self.cell_size)
         self.grid_size = None
@@ -88,13 +88,46 @@ class MainWindow(Frame):
         self.init_frame = Frame(self.master)
         self.init_frame.grid()
         self.init_window()
+        print(self.init_frame.winfo_width())
+        self.center_window()
         self.game_frame = Frame(self.master)
 
         topbar = Menu(self.master)
         self.master.config(menu=topbar)
         topbar.add_command(label="Exit", command=sys.exit)
         topbar.add_command(label="Restart Game", command=self.client_restart)
-        
+
+    def center_window(self):
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+        if self.active_window == 'init':
+            #window_width = self.init_frame.winfo_reqwidth()
+            #window_height = self.init_frame.winfo_reqheight()
+            window_width = 200
+            window_height = 200
+        elif self.active_window == 'game':
+            #window_width = self.game_frame.winfo_reqwidth()
+            #window_height = self.game_frame.winfo_reqheight()
+            window_width = self.grid_size * self.cell_size + 50
+            window_height = window_width
+
+        window_position_width = screen_height // 2 - window_height // 2
+        window_position_height = screen_width // 2 - window_width // 2
+        print(window_width, window_height)
+        self.master.geometry("+{}+{}".format(window_position_height, window_position_width))
+
+    def change_window(self):
+        if self.active_window == 'init':
+            self.active_window = 'game'
+            self.init_frame.grid_forget()
+            self.game_frame.grid()
+            self.center_window()
+        elif self.active_window == 'game':
+            self.active_window = 'init'
+            self.game_frame.grid_forget()
+            self.init_frame.grid()
+            self.center_window()
+
     def init_window(self):
 
         self.master.title("Connect Five!")
@@ -104,7 +137,7 @@ class MainWindow(Frame):
         logo.grid(row=0, column=1, pady=10, padx=10)
 
         entry1label = Label(self.init_frame, text="Enter size (5-20):")
-        entry1label.grid(row=1, column=1, padx=10)
+        entry1label.grid(row=1, column=1, padx=50)
 
         self.entry1 = Entry(self.init_frame)
         self.entry1.config(width=10)
@@ -114,10 +147,10 @@ class MainWindow(Frame):
         entry_button = Button(self.init_frame, text="confirm",
                               padx=2, command=self.size_test)
         entry_button.config(image=self.confirm_img, compound='left')
-        entry_button.grid(row=3, column=1)
+        entry_button.grid(row=3, column=1, pady=10)
 
     def size_test(self):
-        error_message = Label(self.init_frame, width=35)
+        error_message = Label(self.init_frame, width=30)
         error_message.grid(row=4, column=1, padx=0)
         try:
             self.grid_size = int(self.entry1.get())
@@ -130,16 +163,6 @@ class MainWindow(Frame):
         self.controller.grid_size = self.grid_size
         self.game_window()
         self.change_window()
-
-    def change_window(self):
-        if self.active_window == 'init':
-            self.active_window = 'game'
-            self.init_frame.grid_forget()
-            self.game_frame.grid()
-        elif self.active_window == 'game':
-            self.active_window = 'init'
-            self.game_frame.grid_forget()
-            self.init_frame.grid()
 
     def game_window(self):
 
