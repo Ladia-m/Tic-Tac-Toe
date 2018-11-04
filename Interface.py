@@ -4,7 +4,7 @@ from tkinter import *
 from string import ascii_uppercase
 import sys
 
-class CFControl:
+class GameController:
     def __init__(self, master, cell_size=None):
         self.master = master
         self.lastPlayer = 0
@@ -80,7 +80,7 @@ class MainWindow(Frame):
         self.master = master
         self.grid(pady=5)
         self.cell_size = 25
-        self.controller = CFControl(self.master, self.cell_size)
+        self.controller = GameController(self.master, self.cell_size)
         self.grid_size = None
         self.abc = ascii_uppercase
         self.active_window = 'init'
@@ -101,13 +101,13 @@ class MainWindow(Frame):
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
         if self.active_window == 'init':
-            #window_width = self.init_frame.winfo_reqwidth()
-            #window_height = self.init_frame.winfo_reqheight()
+            # window_width = self.init_frame.winfo_reqwidth()
+            # window_height = self.init_frame.winfo_reqheight()
             window_width = 200
             window_height = 200
         elif self.active_window == 'game':
-            #window_width = self.game_frame.winfo_reqwidth()
-            #window_height = self.game_frame.winfo_reqheight()
+            # window_width = self.game_frame.winfo_reqwidth()
+            # window_height = self.game_frame.winfo_reqheight()
             window_width = self.grid_size * self.cell_size + 50
             window_height = window_width
 
@@ -130,7 +130,7 @@ class MainWindow(Frame):
 
     def init_window(self):
 
-        self.master.title("Connect Five!")
+        self.master.title("Piskvorky")
 
         self.img = PhotoImage(file='data/gifs/img.gif')
         logo = Label(self.init_frame, image=self.img)
@@ -222,5 +222,5 @@ class MainWindow(Frame):
 
 if __name__ == '__main__':
     root = Tk()
-    CFive = MainWindow(root)
-    CFive.mainloop()
+    Piskvorky = MainWindow(root)
+    Piskvorky.mainloop()
