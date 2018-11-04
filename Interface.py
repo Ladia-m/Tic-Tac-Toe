@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 from tkinter import *
+from tkinter import messagebox
 from string import ascii_uppercase
 import sys
 
@@ -49,27 +50,29 @@ class GameController:
     def draw_cross(self, x, y):
         x = x * self.cell_size
         y = y * self.cell_size
-        self.canvas.create_line(x + 3,
-                                y + 3,
-                                x + self.cell_size - 3,
-                                y + self.cell_size - 3,
+        padding = self.cell_size // 8
+        self.canvas.create_line(x + padding,
+                                y + padding,
+                                x + self.cell_size - padding,
+                                y + self.cell_size - padding,
                                 fill='#0000ff',
                                 width=3)
 
-        self.canvas.create_line(x + self.cell_size - 3,
-                                y + 3,
-                                x + 3,
-                                y + self.cell_size - 3,
+        self.canvas.create_line(x + self.cell_size - padding,
+                                y + padding,
+                                x + padding,
+                                y + self.cell_size - padding,
                                 fill='#0000ff',
                                 width=3)
 
     def draw_circle(self, x, y):
+        padding = self.cell_size // 8
         x = x * self.cell_size
         y = y * self.cell_size
-        self.canvas.create_oval(x + 3,
-                                y + 3,
-                                x + self.cell_size - 3,
-                                y + self.cell_size - 3,
+        self.canvas.create_oval(x + padding,
+                                y + padding,
+                                x + self.cell_size - padding,
+                                y + self.cell_size - padding,
                                 outline='#ff0000',
                                 width=3)
 
@@ -88,7 +91,6 @@ class MainWindow(Frame):
         self.init_frame = Frame(self.master)
         self.init_frame.grid()
         self.init_window()
-        print(self.init_frame.winfo_width())
         self.center_window()
         self.game_frame = Frame(self.master)
 
@@ -96,6 +98,7 @@ class MainWindow(Frame):
         self.master.config(menu=topbar)
         topbar.add_command(label="Exit", command=sys.exit)
         topbar.add_command(label="Restart Game", command=self.client_restart)
+        topbar.add_command(label="About", command=self.client_about)
 
     def center_window(self):
         screen_width = self.master.winfo_screenwidth()
@@ -115,7 +118,6 @@ class MainWindow(Frame):
             
         window_position_width = screen_width // 2 - window_width // 2
         window_position_height = screen_height // 2 - window_height // 2
-        print(window_width, window_height)
         self.master.geometry("+{}+{}".format(window_position_width, window_position_height))
 
     def change_window(self):
@@ -144,9 +146,11 @@ class MainWindow(Frame):
         self.entry1 = Entry(self.init_frame)
         self.entry1.config(width=10)
         self.entry1.grid(row=2, column=1)
+        self.entry1.focus()
+        self.entry1.bind('<Return>', lambda e: entry_button.config(self.size_test()))
 
-        self.confirm_img = PhotoImage(file='data/gifs/1.gif')
-        entry_button = Button(self.init_frame, text="confirm",
+        self.confirm_img = PhotoImage(file='data/gifs/ok.gif')
+        entry_button = Button(self.init_frame,
                               padx=2, command=self.size_test)
         entry_button.config(image=self.confirm_img, compound='left')
         entry_button.grid(row=3, column=1, pady=10)
@@ -220,6 +224,9 @@ class MainWindow(Frame):
     def client_restart(self):
         python = sys.executable
         os.execl(python, python, *sys.argv)
+
+    def client_about(self):
+        messagebox.showinfo("About", "Piskvorky - Miko 2018\n Version 0.5\n")
 
 
 if __name__ == '__main__':
