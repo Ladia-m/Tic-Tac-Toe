@@ -110,9 +110,9 @@ class MainWindow(Frame):
             # window_height = self.game_frame.winfo_reqheight()
             window_width = self.grid_size * self.cell_size + 50
             window_height = window_width
-
-        window_position_width = screen_height // 2 - window_height // 2
-        window_position_height = screen_width // 2 - window_width // 2
+            
+        window_position_widht = screen_width // 2 - window_width // 2
+        window_position_height = screen_height // 2 - window_height // 2
         print(window_width, window_height)
         self.master.geometry("+{}+{}".format(window_position_height, window_position_width))
 
