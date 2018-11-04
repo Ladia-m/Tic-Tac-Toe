@@ -100,6 +100,8 @@ class MainWindow(Frame):
     def center_window(self):
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
+        window_width = 0
+        window_height = 0
         if self.active_window == 'init':
             # window_width = self.init_frame.winfo_reqwidth()
             # window_height = self.init_frame.winfo_reqheight()
@@ -111,10 +113,10 @@ class MainWindow(Frame):
             window_width = self.grid_size * self.cell_size + 50
             window_height = window_width
             
-        window_position_widht = screen_width // 2 - window_width // 2
+        window_position_width = screen_width // 2 - window_width // 2
         window_position_height = screen_height // 2 - window_height // 2
         print(window_width, window_height)
-        self.master.geometry("+{}+{}".format(window_position_height, window_position_width))
+        self.master.geometry("+{}+{}".format(window_position_width, window_position_height))
 
     def change_window(self):
         if self.active_window == 'init':
