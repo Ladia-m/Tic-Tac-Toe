@@ -25,21 +25,21 @@ class GameController:
         self.abc = ascii_uppercase
 
     def mouse_click(self, event):
-        y, x = event.x, event.y
+        x, y = event.x, event.y
         y = y // self.cell_size
         x = x // self.cell_size
         letterx = ascii_uppercase[x]
 
         if self.playGrid[x][y] == 2:
             if self.lastPlayer == 0:
-                self.draw_cross(y, x)
+                self.draw_cross(x, y)
                 self.lastPlayer = 1
                 self.playGrid[x][y] = 1
 
                 self.top_infotable.configure(text='Player O is on turn.')
                 self.bottom_infotable.configure(text="X played cell {}, {}".format(letterx, y + 1))
             else:
-                self.draw_circle(y, x)
+                self.draw_circle(x, y)
                 self.lastPlayer = 0
                 self.playGrid[x][y] = 0
                 self.top_infotable.configure(text='Player X is on turn.')
@@ -185,28 +185,28 @@ class MainWindow(Frame):
             grid_canvas.create_line(xy, 0, xy, grid_side, fill="#000000")
             grid_canvas.create_line(0, xy, grid_side, xy, fill="#000000")
 
-        label_width = self.grid_size * self.cell_size
-        horizontal_label = Canvas(self.game_frame,
-                                  width=label_width,
-                                  height=self.cell_size)
-        for num in range(1, self.grid_size + 1):
-            x = ((num - 1) * self.cell_size) + self.cell_size / 2
-            y = self.cell_size / 2
-            horizontal_label.create_text(x, y, text=num)
-        horizontal_label.grid(row=0, column=1)
-
         label_height = self.grid_size * self.cell_size
         vertical_label = Canvas(self.game_frame,
-                                width=self.cell_size,
-                                height=label_height)
+                                  width=self.cell_size,
+                                  height=label_height)
+        for num in range(1, self.grid_size + 1):
+            x = self.cell_size / 2
+            y = ((num - 1) * self.cell_size) + self.cell_size / 2
+            vertical_label.create_text(x, y, text=num)
+        vertical_label.grid(row=1, column=0)
+
+        label_width = self.grid_size * self.cell_size
+        horizontal_label = Canvas(self.game_frame,
+                                width=label_width,
+                                height=self.cell_size)
         counter = 1
         while not counter > self.grid_size:
-            x = self.cell_size / 2
-            y = ((counter - 1) * self.cell_size) + self.cell_size / 2
+            x = ((counter - 1) * self.cell_size) + self.cell_size / 2
+            y = self.cell_size / 2
             letter = self.abc[counter - 1]
-            vertical_label.create_text(x, y, text=letter)
+            horizontal_label.create_text(x, y, text=letter)
             counter += 1
-        vertical_label.grid(row=1, column=0)
+        horizontal_label.grid(row=0, column=1)
 
         if self.controller.lastPlayer == 1:
             player = 'O'
