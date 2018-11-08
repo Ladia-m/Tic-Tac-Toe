@@ -9,20 +9,21 @@ class GameController:
     def __init__(self, master, cell_size=None):
         self.master = master
         self.lastPlayer = 0
-        
-        self.playGrid = [] # player O = 0, player X = 1, empty = 2
-        for row in range(0, cell_size):
-            columns = []
-            for column in range(0, cell_size):
-                columns.append(2)
-            self.playGrid.append(columns)
-
         self.cell_size = cell_size
         self.grid_size = None
         self.canvas = None
         self.top_infotable = None
         self.bottom_infotable = None
         self.abc = ascii_uppercase
+        self.playGrid = []  # player O = 0, player X = 1, empty = 2
+
+    def play_grid_init(self, grid_size):
+        self.grid_size = grid_size
+        for row in range(0, self.grid_size):
+            columns = []
+            for column in range(0, self.grid_size):
+                columns.append(2)
+            self.playGrid.append(columns)
 
     def mouse_click(self, event):
         x, y = event.x, event.y
@@ -38,12 +39,14 @@ class GameController:
 
                 self.top_infotable.configure(text='Player O is on turn.')
                 self.bottom_infotable.configure(text="X played cell {}, {}".format(letterx, y + 1))
+                self.end_game_test()
             else:
                 self.draw_circle(x, y)
                 self.lastPlayer = 0
                 self.playGrid[x][y] = 0
                 self.top_infotable.configure(text='Player X is on turn.')
                 self.bottom_infotable.configure(text="O played cell {}, {}".format(letterx, y + 1))
+                self.end_game_test()
         else:
             self.bottom_infotable.configure(text='Cell is already occupied!')
 
@@ -75,6 +78,78 @@ class GameController:
                                 y + self.cell_size - padding,
                                 outline='#ff0000',
                                 width=3)
+
+    def end_game_test(self):
+        player_x = []
+        player_o = []
+        for x in range(0, self.grid_size):
+            for y in range(0, self.grid_size):
+                if self.playGrid[x][y] == 0:
+                    player_o.append([x, y])
+                elif self.playGrid[x][y] == 1:
+                    player_x.append([x, y])
+        if len(player_x) >= 5:
+            for position in player_x:
+                counter = {}
+                counter['horizontal'] = 1
+                counter['vertical'] = 1
+                counter['diagonal_lr'] = 1
+                counter['diagonal_rl'] = 1
+                for i in range(1, 5):
+                    if [position[0] + i, position[1]] in player_x:
+                        counter['horizontal'] += 1
+                    if [position[0], position[1] + i] in player_x:
+                        counter['vertical'] += 1
+                    if [position[0] + i, position[1] + i] in player_x:
+                        counter['diagonal_lr'] += 1
+                    if [position[0] - i, position[1] + i] in player_x:
+                        counter['diagonal_rl'] += 1
+                for direction in counter:
+                    if counter[direction] == 5:
+                        self.end_game('X', position, direction)
+                        return
+        if len(player_o) >= 5:
+            for position in player_o:
+                counter = {}
+                counter['horizontal'] = 1
+                counter['vertical'] = 1
+                counter['diagonal_lr'] = 1
+                counter['diagonal_rl'] = 1
+                for i in range(1, 5):
+                    if [position[0] + i, position[1]] in player_o:
+                        counter['horizontal'] += 1
+                    if [position[0], position[1] + i] in player_o:
+                        counter['vertical'] += 1
+                    if [position[0] + i, position[1] + i] in player_o:
+                        counter['diagonal_lr'] += 1
+                    if [position[0] - i, position[1] + i] in player_o:
+                        counter['diagonal_rl'] += 1
+                for direction in counter:
+                    if counter[direction] == 5:
+                        self.end_game('O', position, direction)
+                        return
+
+    def end_game(self, player, coordinates, direction):
+        line_start_x = coordinates[0] * self.cell_size + self.cell_size // 2
+        line_start_y = coordinates[1] * self.cell_size + self.cell_size // 2
+        if direction == 'horizontal':
+            line_end_x = (coordinates[0] + 5) * self.cell_size - self.cell_size // 2
+            line_end_y = line_start_y
+        if direction == 'vertical':
+            line_end_x = line_start_x
+            line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
+        if direction == 'diagonal_lr':
+            line_end_x = (coordinates[0] + 5) * self.cell_size - self.cell_size // 2
+            line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
+        if direction == 'diagonal_rl':
+            line_end_x = (coordinates[0] - 3) * self.cell_size - self.cell_size // 2
+            line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
+        self.canvas.create_line(line_start_x, line_start_y, line_end_x, line_end_y,
+                                width=5, fill='#000000')
+        messagebox.showwarning(message='{} Player {} WON!!!'.format(direction, player))
+        self.top_infotable.configure(text='Player {} won!'.format(player))
+        self.bottom_infotable.configure(text='Player {} won!'.format(player))
+
 
 class MainWindow(Frame):
 
@@ -166,7 +241,7 @@ class MainWindow(Frame):
         except ValueError:
             error_message.configure(text='Insert only whole #!')
             return None
-        self.controller.grid_size = self.grid_size
+        self.controller.play_grid_init(self.grid_size)
         self.game_window()
         self.change_window()
 
@@ -197,8 +272,8 @@ class MainWindow(Frame):
 
         label_width = self.grid_size * self.cell_size
         horizontal_label = Canvas(self.game_frame,
-                                width=label_width,
-                                height=self.cell_size)
+                                  width=label_width,
+                                  height=self.cell_size)
         counter = 1
         while not counter > self.grid_size:
             x = ((counter - 1) * self.cell_size) + self.cell_size / 2
