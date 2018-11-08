@@ -146,7 +146,7 @@ class GameController:
             line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
         self.canvas.create_line(line_start_x, line_start_y, line_end_x, line_end_y,
                                 width=5, fill='#000000')
-        messagebox.showwarning(message='{} Player {} WON!!!'.format(direction, player))
+        messagebox.showwarning(message='Player {} WON!!!'.format(player))
         self.top_infotable.configure(text='Player {} won!'.format(player))
         self.bottom_infotable.configure(text='Player {} won!'.format(player))
 
