@@ -16,6 +16,8 @@ class GameController:
         self.bottom_infotable = None
         self.abc = ascii_uppercase
         self.playGrid = []  # player O = 0, player X = 1, empty = 2
+        self.playero_cells = []
+        self.playerx_cells = []
 
     def play_grid_init(self, grid_size):
         self.grid_size = grid_size
@@ -36,7 +38,7 @@ class GameController:
                 self.draw_cross(x, y)
                 self.lastPlayer = 1
                 self.playGrid[x][y] = 1
-
+                self.playerx_cells.append([x, y])
                 self.top_infotable.configure(text='Player O is on turn.')
                 self.bottom_infotable.configure(text="X played cell {}, {}".format(letterx, y + 1))
                 self.end_game_test()
@@ -44,6 +46,7 @@ class GameController:
                 self.draw_circle(x, y)
                 self.lastPlayer = 0
                 self.playGrid[x][y] = 0
+                self.playero_cells.append([x, y])
                 self.top_infotable.configure(text='Player X is on turn.')
                 self.bottom_infotable.configure(text="O played cell {}, {}".format(letterx, y + 1))
                 self.end_game_test()
@@ -80,71 +83,52 @@ class GameController:
                                 width=3)
 
     def end_game_test(self):
-        player_x = []
-        player_o = []
-        for x in range(0, self.grid_size):
-            for y in range(0, self.grid_size):
-                if self.playGrid[x][y] == 0:
-                    player_o.append([x, y])
-                elif self.playGrid[x][y] == 1:
-                    player_x.append([x, y])
-        if len(player_x) >= 5:
-            for position in player_x:
-                counter = {}
-                counter['horizontal'] = 1
-                counter['vertical'] = 1
-                counter['diagonal_lr'] = 1
-                counter['diagonal_rl'] = 1
-                for i in range(1, 5):
-                    if [position[0] + i, position[1]] in player_x:
-                        counter['horizontal'] += 1
-                    if [position[0], position[1] + i] in player_x:
-                        counter['vertical'] += 1
-                    if [position[0] + i, position[1] + i] in player_x:
-                        counter['diagonal_lr'] += 1
-                    if [position[0] - i, position[1] + i] in player_x:
-                        counter['diagonal_rl'] += 1
-                for direction in counter:
-                    if counter[direction] == 5:
-                        self.end_game('X', position, direction)
-                        return
-        if len(player_o) >= 5:
-            for position in player_o:
-                counter = {}
-                counter['horizontal'] = 1
-                counter['vertical'] = 1
-                counter['diagonal_lr'] = 1
-                counter['diagonal_rl'] = 1
-                for i in range(1, 5):
-                    if [position[0] + i, position[1]] in player_o:
-                        counter['horizontal'] += 1
-                    if [position[0], position[1] + i] in player_o:
-                        counter['vertical'] += 1
-                    if [position[0] + i, position[1] + i] in player_o:
-                        counter['diagonal_lr'] += 1
-                    if [position[0] - i, position[1] + i] in player_o:
-                        counter['diagonal_rl'] += 1
-                for direction in counter:
-                    if counter[direction] == 5:
-                        self.end_game('O', position, direction)
-                        return
+        for player_cells in self.playerx_cells, self.playero_cells:
+            if player_cells == self.playerx_cells:
+                player = 'X'
+            else:
+                player = 'O'
+            if len(player_cells) >= 5:
+                for position in player_cells:
+                    finish_position = [position[0] + 4, position[1]]
+                    if finish_position in player_cells:
+                        between = []
+                        for i in range(1, 4):
+                            between.append((lambda l, x: [l[0] + x, l[1]])(position, i))
+                        if all(i in player_cells for i in between):
+                            self.end_game(player, position, finish_position)
+                            return
+                    finish_position = [position[0], position[1] + 4]
+                    if finish_position in player_cells:
+                        between = []
+                        for i in range(1, 4):
+                            between.append((lambda l, x: [l[0], l[1] + x])(position, i))
+                        if all(i in player_cells for i in between):
+                            self.end_game(player, position, finish_position)
+                            return
+                    finish_position = [position[0] + 4, position[1] + 4]
+                    if finish_position in player_cells:
+                        between = []
+                        for i in range(1, 4):
+                            between.append((lambda l, x: [l[0] + x, l[1] + x])(position, i))
+                        if all(i in player_cells for i in between):
+                            self.end_game(player, position, finish_position)
+                            return
+                    finish_position = [position[0] - 4, position[1] + 4]
+                    if finish_position in player_cells:
+                        between = []
+                        for i in range(1, 4):
+                            between.append((lambda l, x: [l[0] - x, l[1] + x])(position, i))
+                        if all(i in player_cells for i in between):
+                            self.end_game(player, position, finish_position)
+                            return
 
-    def end_game(self, player, coordinates, direction):
-        line_start_x = coordinates[0] * self.cell_size + self.cell_size // 2
-        line_start_y = coordinates[1] * self.cell_size + self.cell_size // 2
-        if direction == 'horizontal':
-            line_end_x = (coordinates[0] + 5) * self.cell_size - self.cell_size // 2
-            line_end_y = line_start_y
-        if direction == 'vertical':
-            line_end_x = line_start_x
-            line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
-        if direction == 'diagonal_lr':
-            line_end_x = (coordinates[0] + 5) * self.cell_size - self.cell_size // 2
-            line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
-        if direction == 'diagonal_rl':
-            line_end_x = (coordinates[0] - 3) * self.cell_size - self.cell_size // 2
-            line_end_y = (coordinates[1] + 5) * self.cell_size - self.cell_size // 2
-        self.canvas.create_line(line_start_x, line_start_y, line_end_x, line_end_y,
+    def end_game(self, player, start_position, finish_position):
+        line_start_x = start_position[0] * self.cell_size + self.cell_size // 2
+        line_start_y = start_position[1] * self.cell_size + self.cell_size // 2
+        line_finish_x = finish_position[0] * self.cell_size + self.cell_size // 2
+        line_finish_y = finish_position[1] * self.cell_size + self.cell_size // 2
+        self.canvas.create_line(line_start_x, line_start_y, line_finish_x, line_finish_y,
                                 width=5, fill='#000000')
         messagebox.showwarning(message='Player {} WON!!!'.format(player))
         self.top_infotable.configure(text='Player {} won!'.format(player))
