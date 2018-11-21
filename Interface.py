@@ -23,6 +23,7 @@ class GameController:
         self.playero_cells = []
         self.playerx_cells = []
         self.ai_switch = 0
+        self.game_over = False
 
 
     def play_grid_init(self, grid_size, ai_switch):
@@ -39,11 +40,12 @@ class GameController:
                 self.run_ai('start')
 
     def play_grid_click(self, event):
-        x, y = event.x, event.y
-        y = y // self.cell_size
-        x = x // self.cell_size
-        self.next_turn(x, y)
-        if self.ai_switch == 1:
+        if not self.game_over:
+            x, y = event.x, event.y
+            y = y // self.cell_size
+            x = x // self.cell_size
+            valid_move = self.next_turn(x, y)
+        if self.ai_switch == 1 and valid_move and not self.game_over:
             self.run_ai([x, y])
 
     def run_ai(self, coordinates):
@@ -62,6 +64,7 @@ class GameController:
                                                                                     letterx, y + 1))
                 self.end_game_test()
                 self.player_on_move = 1
+                return True
             else:
                 self.draw_circle(x, y)
                 self.playGrid[x][y] = 1
@@ -71,8 +74,10 @@ class GameController:
                                                                                     letterx, y + 1))
                 self.end_game_test()
                 self.player_on_move = 2
+                return True
         else:
             self.bottom_infotable.configure(text='Cell is already occupied!')
+            return False
 
     def draw_cross(self, x, y):
         x = x * self.cell_size
@@ -156,6 +161,7 @@ class GameController:
         messagebox.showwarning(message='Player {} WON!!!'.format(player))
         self.top_infotable.configure(text='Player {} won!'.format(player))
         self.bottom_infotable.configure(text='Player {} won!'.format(player))
+        self.game_over = True
 
 
 class MainWindow(Frame):
