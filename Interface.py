@@ -40,6 +40,7 @@ class GameController:
                 self.run_ai('start')
 
     def play_grid_click(self, event):
+        valid_move = True
         if not self.game_over:
             x, y = event.x, event.y
             y = y // self.cell_size
