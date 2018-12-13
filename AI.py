@@ -12,13 +12,13 @@ class AI:
         self.rival_moves = []
         self.my_moves = []
         self.directions = ['tt', 'tr', 'rr', 'br', 'bb', 'bl', 'll', 'tl']
-        for column in range(0, self.grid_size):
+        for column in range(0, self.grid_size + 1):
             rows = []
-            for row in range(0, self.grid_size):
+            for row in range(0, self.grid_size + 1):
                 rows.append(0)   # 0 = empty; 1 = rival; 2 = this AI
             self.play_grid.append(rows)
         self.empty_score_grid = self.play_grid
-        self.test = test_gui.TestGrid(grid_size) #test purpose
+        self.test = test_gui.TestGrid(grid_size) #test purpose\
 
     def play(self, coordinates):
         self.score_grid = self.empty_score_grid
@@ -28,7 +28,7 @@ class AI:
             x = coordinates[0]
             y = coordinates[1]
             self.play_grid[x][y] = 1
-            self.rival_moves.append([x, y])
+            self.rival_moves.append(coordinates)
             x, y = self.set_defense_score()
         self.play_grid[x][y] = 2
         self.my_moves.append([x, y])
@@ -37,35 +37,41 @@ class AI:
 
     def set_defense_score(self):
         default_score = 10
-        rival_moves = self.rival_moves
+        rival_moves = []
+        rival_moves += self.rival_moves
+        print(self.rival_moves)
         rival_lines = []
         rival_singles = []
         while len(rival_moves) > 0:
             center_cell = rival_moves[0]
             around = self.check_around(center_cell)
             if len(around) > 0:
+                print('test') #test
                 for i in range(0, 4):
                     if self.directions[i] in around or self.directions[i + 4] in around:
                         line = [center_cell]
-                        found = True
+                        no_break1 = True
+                        no_break2 = True
                         distance = 1
-                        while found:
+                        while no_break1 or no_break2:
                             one_side = self.cellxy(center_cell, self.directions[i], distance)
                             other_side = self.cellxy(center_cell, self.directions[i + 4], distance)
-                            if one_side in rival_moves:
+                            if (one_side in rival_moves) and no_break1:
                                 line.append(one_side)
-                            if other_side in rival_moves:
+                            else:
+                                no_break1 = False
+                            if (other_side in rival_moves) and no_break2:
                                 line.append(other_side)
-                            if (one_side not in rival_moves) and (other_side not in rival_moves):
-                                found = False
+                            else:
+                                no_break2 = False
                             distance += 1
                         rival_lines.append(line)
                 for line in rival_lines:
                     for cell in line:
-                        rival_moves.pop(rival_moves.index(cell)) #it is possible item already not in list, maybe add if
+                        rival_moves.remove(cell) #it is possible item already not in list, maybe add if
             else:
                 rival_singles.append(center_cell)
-                rival_moves.pop(-1)
+                rival_moves.remove(center_cell)
         old_rival_lines = rival_lines
         rival_lines = []
         for i in old_rival_lines:
@@ -190,7 +196,7 @@ class AI:
                 if (lowest[0] + lowest[1]) > (i[0] + i[1]):
                     lowest = i
             sorted_list.append(lowest)
-            the_list.pop(the_list.index(lowest))
+            the_list.remove(lowest)
         return sorted_list
 
     def cells_on_line(self, option, direction, start, length):
