@@ -7,8 +7,6 @@ class AI:
     def __init__(self, grid_size):
         self.grid_size = grid_size
         self.play_grid = []
-        self.empty_score_grid = []
-        self.score_grid = []
         self.rival_moves = []
         self.my_moves = []
         self.directions = ['tt', 'tr', 'rr', 'br', 'bb', 'bl', 'll', 'tl']
@@ -17,11 +15,15 @@ class AI:
             for row in range(0, self.grid_size + 1):
                 rows.append(0)   # 0 = empty; 1 = rival; 2 = this AI
             self.play_grid.append(rows)
-        self.empty_score_grid = self.play_grid
-        self.test = test_gui.TestGrid(grid_size) #test purpose\
+        self.test = test_gui.TestGrid(grid_size) #test purpose
 
     def play(self, coordinates):
-        self.score_grid = self.empty_score_grid
+        self.score_grid = []
+        for column in range(0, self.grid_size + 1):
+            rows = []
+            for row in range(0, self.grid_size + 1):
+                rows.append(0)
+            self.score_grid.append(rows)
         if coordinates == 'start':
             x, y = self.set_defense_score()
         else:
@@ -39,14 +41,12 @@ class AI:
         default_score = 10
         rival_moves = []
         rival_moves += self.rival_moves
-        print(self.rival_moves)
         rival_lines = []
         rival_singles = []
         while len(rival_moves) > 0:
             center_cell = rival_moves[0]
             around = self.check_around(center_cell)
             if len(around) > 0:
-                print('test') #test
                 for i in range(0, 4):
                     if self.directions[i] in around or self.directions[i + 4] in around:
                         line = [center_cell]
@@ -68,7 +68,8 @@ class AI:
                         rival_lines.append(line)
                 for line in rival_lines:
                     for cell in line:
-                        rival_moves.remove(cell) #it is possible item already not in list, maybe add if
+                        if cell in rival_moves:
+                            rival_moves.remove(cell) #it is possible item already not in list, maybe add if
             else:
                 rival_singles.append(center_cell)
                 rival_moves.remove(center_cell)
@@ -88,7 +89,8 @@ class AI:
             direction1 = self.check_direction(line[-1], line[0])
             x, y = self.cellxy(line[0], direction1, 1)
             rivals_possible_cells = self.cells_on_line('empty&rival', direction1, [x, y], 5 - len(line))
-            if len(rivals_possible_cells) + len(line) < 5:
+            print(rivals_possible_cells)
+            if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
                 penalty = 1
             self.score_grid[x][y] += default_score * (len(line) - penalty)
             x, y = self.cellxy(line[0], direction1, 2)
@@ -96,8 +98,8 @@ class AI:
             penalty = 0
             direction2 = self.check_direction(line[0], line[-1])
             x, y = self.cellxy(line[0], direction2, 1)
-            rivals_possible_cells = self.cells_on_line('empty&rival', direction1, [x, y], 5 - len(line))
-            if len(rivals_possible_cells) + len(line) < 5:
+            rivals_possible_cells = self.cells_on_line('empty&rival', direction2, [x, y], 5 - len(line))
+            if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
                 penalty = 1
             self.score_grid[x][y] += default_score * (len(line) - penalty)
             x, y = self.cellxy(line[0], direction2, 2)
@@ -170,22 +172,22 @@ class AI:
 
     def check_direction(self, first_cell, second_cell):
         if first_cell[1] == second_cell[1]:
-            if first_cell[0] > second_cell[0]:
+            if first_cell[0] < second_cell[0]:
                 return 'rr'
             else:
                 return 'll'
         if first_cell[0] == second_cell[0]:
-            if first_cell[1] > second_cell[1]:
+            if first_cell[1] < second_cell[1]:
                 return 'bb'
             else:
                 return 'tt'
-        if (first_cell[0] > second_cell[0]) and (first_cell[1] > second_cell[1]):
-            return 'br'
         if (first_cell[0] < second_cell[0]) and (first_cell[1] < second_cell[1]):
+            return 'br'
+        if (first_cell[0] > second_cell[0]) and (first_cell[1] > second_cell[1]):
             return 'tl'
-        if (first_cell[0] > second_cell[0]) and (first_cell[1] < second_cell[1]):
-            return 'tr'
         if (first_cell[0] < second_cell[0]) and (first_cell[1] > second_cell[1]):
+            return 'tr'
+        if (first_cell[0] > second_cell[0]) and (first_cell[1] < second_cell[1]):
             return 'bl'
 
     def sorter(self, the_list):
@@ -205,6 +207,7 @@ class AI:
         counter = 0
         whole_line = []
         next_cell = self.cellxy(start, direction, 0)
+        print(str(start) + ': ' + str(next_cell) + direction + str(length))
         while self.within_grid(next_cell):
             whole_line.append(next_cell)
             next_cell = self.cellxy(next_cell, direction, 1)
