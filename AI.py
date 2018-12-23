@@ -43,8 +43,8 @@ class AI:
         rival_moves += self.rival_moves
         rival_lines = []
         rival_singles = []
-        while len(rival_moves) > 0:
-            center_cell = rival_moves[0]
+        for cell in rival_moves:
+            center_cell = cell
             around = self.check_around(center_cell)
             if len(around) > 0:
                 for i in range(0, 4):
@@ -65,31 +65,26 @@ class AI:
                             else:
                                 no_break2 = False
                             distance += 1
-                        rival_lines.append(line)
-                for line in rival_lines:
-                    for cell in line:
-                        if cell in rival_moves:
-                            rival_moves.remove(cell)
+                        line = self.sorter(line)
+                        if line not in rival_lines:
+                            rival_lines.append(line)
             else:
                 rival_singles.append(center_cell)
                 rival_moves.remove(center_cell)
-        old_rival_lines = rival_lines
-        rival_lines = []
-        for i in old_rival_lines:
-            rival_lines.append(self.sorter(i))
-        del(old_rival_lines)
         for i in rival_singles:
             for direction in self.directions:
                 x, y = self.cellxy(i, direction, 1)
                 if ([x, y] not in self.my_moves) and (self.within_grid([x, y])):
                     self.score_grid[x][y] += default_score
         for line in rival_lines:
+            print(line)
+        for line in rival_lines:
             #add points at ends of rivals line
             penalty = 0
             direction1 = self.check_direction(line[-1], line[0])
             x, y = self.cellxy(line[0], direction1, 1)
             rivals_possible_cells = self.cells_on_line('empty&rival', direction1, [x, y], 5 - len(line))
-            print(rivals_possible_cells)
+#            print(rivals_possible_cells)
             if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
                 penalty = 1
             self.score_grid[x][y] += default_score * (len(line) - penalty)
@@ -195,7 +190,9 @@ class AI:
         while len(the_list) > 0:
             lowest = the_list[0]
             for i in the_list:
-                if (lowest[0] + lowest[1]) > (i[0] + i[1]):
+                if lowest[0] + lowest[1] > i[0] + i[1]:
+                    lowest = i
+                elif lowest[0] + lowest[1] == i[0] + i[1] and lowest[0] > i[0]:
                     lowest = i
             sorted_list.append(lowest)
             the_list.remove(lowest)
@@ -207,7 +204,7 @@ class AI:
         counter = 0
         whole_line = []
         next_cell = self.cellxy(start, direction, 0)
-        print(str(start) + ': ' + str(next_cell) + direction + str(length))
+#        print(str(start) + ': ' + str(next_cell) + direction + str(length))
         while self.within_grid(next_cell):
             whole_line.append(next_cell)
             next_cell = self.cellxy(next_cell, direction, 1)
