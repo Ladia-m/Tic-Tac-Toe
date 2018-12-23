@@ -1,5 +1,5 @@
 # Piskvorky
-This is my learning project. The goal is to create environment and AI for playing connect five.
+This is my learning project. The goal is to create environment and AI for playing Piskvorky.
 
 needed modules for running:
 tk-inter:
