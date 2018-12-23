@@ -69,7 +69,7 @@ class AI:
                 for line in rival_lines:
                     for cell in line:
                         if cell in rival_moves:
-                            rival_moves.remove(cell) #it is possible item already not in list, maybe add if
+                            rival_moves.remove(cell)
             else:
                 rival_singles.append(center_cell)
                 rival_moves.remove(center_cell)
