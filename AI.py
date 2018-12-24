@@ -39,11 +39,9 @@ class AI:
 
     def set_defense_score(self):
         default_score = 10
-        rival_moves = []
-        rival_moves += self.rival_moves
         rival_lines = []
         rival_singles = []
-        for cell in rival_moves:
+        for cell in self.rival_moves:
             center_cell = cell
             around = self.check_around(center_cell)
             if len(around) > 0:
@@ -56,11 +54,11 @@ class AI:
                         while no_break1 or no_break2:
                             one_side = self.cellxy(center_cell, self.directions[i], distance)
                             other_side = self.cellxy(center_cell, self.directions[i + 4], distance)
-                            if (one_side in rival_moves) and no_break1:
+                            if (one_side in self.rival_moves) and no_break1:
                                 line.append(one_side)
                             else:
                                 no_break1 = False
-                            if (other_side in rival_moves) and no_break2:
+                            if (other_side in self.rival_moves) and no_break2:
                                 line.append(other_side)
                             else:
                                 no_break2 = False
@@ -70,21 +68,19 @@ class AI:
                             rival_lines.append(line)
             else:
                 rival_singles.append(center_cell)
-                rival_moves.remove(center_cell)
         for i in rival_singles:
             for direction in self.directions:
                 x, y = self.cellxy(i, direction, 1)
                 if ([x, y] not in self.my_moves) and (self.within_grid([x, y])):
                     self.score_grid[x][y] += default_score
         for line in rival_lines:
-            print(line)
-        for line in rival_lines:
             #add points at ends of rivals line
             penalty = 0
             direction1 = self.check_direction(line[-1], line[0])
             x, y = self.cellxy(line[0], direction1, 1)
-            rivals_possible_cells = self.cells_on_line('empty&rival', direction1, [x, y], 5 - len(line))
-#            print(rivals_possible_cells)
+            rivals_possible_cells = self.cells_on_line('empty&rival', direction1, [x, y], 5 - len(line), True)
+            print('\npossible cells first direction:')
+            print(rivals_possible_cells)
             if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
                 penalty = 1
             self.score_grid[x][y] += default_score * (len(line) - penalty)
@@ -92,12 +88,14 @@ class AI:
             self.score_grid[x][y] += default_score * (len(line) - 1 - penalty)
             penalty = 0
             direction2 = self.check_direction(line[0], line[-1])
-            x, y = self.cellxy(line[0], direction2, 1)
-            rivals_possible_cells = self.cells_on_line('empty&rival', direction2, [x, y], 5 - len(line))
+            x, y = self.cellxy(line[-1], direction2, 1)
+            rivals_possible_cells = self.cells_on_line('empty&rival', direction2, [x, y], 5 - len(line), True)
+            print('\npossible cells second direction:')
+            print(rivals_possible_cells)
             if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
                 penalty = 1
             self.score_grid[x][y] += default_score * (len(line) - penalty)
-            x, y = self.cellxy(line[0], direction2, 2)
+            x, y = self.cellxy(line[-1], direction2, 2)
             self.score_grid[x][y] += default_score * (len(line) - 1 - penalty)
             #add points around rivals line
             cells_around = []
@@ -127,11 +125,8 @@ class AI:
                     self.test.insert_score(cell_value, x, y)
                 else:                                           #test
                     self.test.insert_score(cell_value, x, y)    #test
-
         cell_index = randint(1, len(top_score) - 1)
         return top_score[cell_index]
-
-
 
     def check_around(self, center_cell):
         cells_around = {}
@@ -198,13 +193,13 @@ class AI:
             the_list.remove(lowest)
         return sorted_list
 
-    def cells_on_line(self, option, direction, start, length):
+    def cells_on_line(self, option, direction, start, length, stop=False):
         if length == 0:
             length = self.grid_size
         counter = 0
         whole_line = []
-        next_cell = self.cellxy(start, direction, 0)
-#        print(str(start) + ': ' + str(next_cell) + direction + str(length))
+        next_cell = start
+        print('\n' + str(start) + ': ' + str(next_cell) + direction + str(length))
         while self.within_grid(next_cell):
             whole_line.append(next_cell)
             next_cell = self.cellxy(next_cell, direction, 1)
@@ -213,22 +208,26 @@ class AI:
                 break
         if option == 'rival':
             return_line = []
-            for cell in self.rival_moves:
-                if cell in whole_line:
+            for cell in whole_line:
+                if cell in self.rival_moves:
                     return_line.append(cell)
+                elif stop:
+                    break
             return return_line
         if option == 'me':
             return_line = []
-            for cell in self.my_moves:
-                if cell in whole_line:
+            for cell in whole_line:
+                if cell in self.my_moves:
                     return_line.append(cell)
+                elif stop:
+                    break
             return return_line
         if option == 'empty':
             return_line = []
             for cell in whole_line:
                 if cell not in self.my_moves and cell not in self.rival_moves:
                     return_line.append(cell)
-                else:
+                elif stop:
                     break
             return return_line
         if option == 'empty&rival':
@@ -236,5 +235,8 @@ class AI:
             for cell in whole_line:
                 if cell not in self.my_moves:
                     return_line.append(cell)
+                elif stop:
+                    break
+            return return_line
         if option == 'all':
             return whole_line
