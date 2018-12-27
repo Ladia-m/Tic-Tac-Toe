@@ -75,39 +75,37 @@ class AI:
                     self.score_grid[x][y] += default_score
         for line in rival_lines:
             #add points at ends of rivals line
-            penalty = 0
-            direction1 = self.check_direction(line[-1], line[0])
-            x, y = self.cellxy(line[0], direction1, 1)
-            rivals_possible_cells = self.cells_on_line('empty&rival', direction1, [x, y], 5 - len(line), True)
-            print('\npossible cells first direction:')
-            print(rivals_possible_cells)
-            if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
-                penalty = 1
-            self.score_grid[x][y] += default_score * (len(line) - penalty)
-            x, y = self.cellxy(line[0], direction1, 2)
-            self.score_grid[x][y] += default_score * (len(line) - 1 - penalty)
-            penalty = 0
-            direction2 = self.check_direction(line[0], line[-1])
-            x, y = self.cellxy(line[-1], direction2, 1)
-            rivals_possible_cells = self.cells_on_line('empty&rival', direction2, [x, y], 5 - len(line), True)
-            print('\npossible cells second direction:')
-            print(rivals_possible_cells)
-            if rivals_possible_cells and (len(rivals_possible_cells) + len(line) < 5):
-                penalty = 1
-            self.score_grid[x][y] += default_score * (len(line) - penalty)
-            x, y = self.cellxy(line[-1], direction2, 2)
-            self.score_grid[x][y] += default_score * (len(line) - 1 - penalty)
+            direction_1 = self.check_direction(line[-1], line[0])
+            x, y = self.cellxy(line[0], direction_1, 1)
+            line_extension_1 = self.cells_on_line('empty&rival', direction_1, [x, y], 5 - len(line), True)
+            direction_2 = self.check_direction(line[0], line[-1])
+            x, y = self.cellxy(line[-1], direction_2, 1)
+            line_extension_2 = self.cells_on_line('empty&rival', direction_2, [x, y], 5 - len(line), True)
+            if len(line_extension_1) + len(line_extension_2) + len(line) >= 5:
+                for line_extension in [line_extension_1, line_extension_2]:
+                    variable_score = 0
+                    distance = 0
+                    if len(line_extension) + len(line) < 5:
+                        variable_score -= default_score
+                    if len(line) == 3 and len(line_extension_1) > 0 and len(line_extension_2) > 0:
+                        variable_score += 10 * default_score
+                    # pridej bonus v situaci "XXX X"
+                    for x, y in line_extension:
+                        self.score_grid[x][y] += default_score * (len(line) - distance) + variable_score
+                        distance += 1
             #add points around rivals line
+        for line in rival_lines:
             cells_around = []
             for direction in self.directions:
-                if direction in [direction1, direction2]:
+                if direction in [direction_1, direction_2]:
                     continue
                 for cell in line:
                     x, y = self.cellxy(cell, direction, 1)
                     if [x, y] not in cells_around:
                         cells_around.append([x, y])
             for x, y in cells_around:
-                self.score_grid[x][y] += default_score
+                if self.score_grid[x][y] < 2 * default_score:
+                    self.score_grid[x][y] += default_score
 
         top_score = [0]
         for column in range(0, self.grid_size):
@@ -199,7 +197,6 @@ class AI:
         counter = 0
         whole_line = []
         next_cell = start
-        print('\n' + str(start) + ': ' + str(next_cell) + direction + str(length))
         while self.within_grid(next_cell):
             whole_line.append(next_cell)
             next_cell = self.cellxy(next_cell, direction, 1)
