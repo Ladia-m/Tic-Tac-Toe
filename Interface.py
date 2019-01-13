@@ -37,7 +37,7 @@ class GameController:
         if self.ai_switch == 1:
             self.AI = AI(self.grid_size)
             if self.player_names[self.player_on_move] == 'AI':
-                self.run_ai('start')
+                self.run_ai()
 
     def play_grid_click(self, event):
         valid_move = True
@@ -49,7 +49,7 @@ class GameController:
         if self.ai_switch == 1 and valid_move and not self.game_over:
             self.run_ai([x, y])
 
-    def run_ai(self, coordinates):
+    def run_ai(self, coordinates=None):
         x, y = self.AI.play(coordinates)
         self.next_turn(x, y)
 
