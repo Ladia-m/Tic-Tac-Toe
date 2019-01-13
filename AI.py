@@ -17,21 +17,39 @@ class AI:
             self.play_grid.append(rows)
         self.test = test_gui.TestGrid(grid_size) #test purpose
 
-    def play(self, coordinates):
+    def play(self, coordinates=None):
         self.score_grid = []
         for column in range(0, self.grid_size):
             rows = []
             for row in range(0, self.grid_size):
                 rows.append(0)
             self.score_grid.append(rows)
-        if coordinates == 'start':
-            x, y = self.set_defense_score()
+        if not coordinates:
+            x = randint(self.grid_size // 2 - 2, self.grid_size // 2 + 2)
+            y = randint(self.grid_size // 2 - 2, self.grid_size // 2 + 2)
         else:
             x = coordinates[0]
             y = coordinates[1]
             self.play_grid[x][y] = 1
             self.rival_moves.append(coordinates)
-            x, y = self.set_defense_score()
+            self.set_defense_score()
+            top_score = [0]
+            for column in range(0, self.grid_size):
+                for row in range(0, self.grid_size):
+                    x, y = column, row
+                    cell_value = self.score_grid[x][y]
+                    if [x, y] in self.my_moves or [x, y] in self.rival_moves:
+                        cell_value = 0
+                        self.test.insert_score(cell_value, x, y)
+                    if cell_value > top_score[0]:
+                        top_score = [cell_value, [x, y]]
+                        self.test.insert_score(cell_value, x, y)
+                    elif cell_value == top_score[0]:
+                        top_score.append([x, y])
+                        self.test.insert_score(cell_value, x, y)
+                    else:  # test
+                        self.test.insert_score(cell_value, x, y)  # test
+            x, y = top_score[randint(1, len(top_score) - 1)]
         self.play_grid[x][y] = 2
         self.my_moves.append([x, y])
         self.test.show_sb()
@@ -41,6 +59,9 @@ class AI:
         default_score = 10
         rival_lines = []
         rival_singles = []
+        direction_1 = None
+        direction_2 = None
+        win_in = 5
         for cell in self.rival_moves:
             center_cell = cell
             around = self.check_around(center_cell)
@@ -73,6 +94,8 @@ class AI:
                 x, y = self.cellxy(i, direction, 1)
                 if x < self.grid_size and y < self.grid_size:
                     if ([x, y] not in self.my_moves) and (self.within_grid([x, y])):
+                        if win_in > 4:
+                            win_in = 4
                         self.score_grid[x][y] += default_score
         for line in rival_lines:
             direction_1 = self.check_direction(line[-1], line[0])
@@ -82,11 +105,13 @@ class AI:
             x, y = self.cellxy(line[-1], direction_2, 1)
             line_extension_2 = self.cells_on_line('empty&rival', direction_2, [x, y], 5 - len(line), True)
             if len(line_extension_1) + len(line_extension_2) + len(line) >= 5:
+                if win_in > 5 - len(line):
+                    win_in = len(line)
                 for line_extension in [line_extension_1, line_extension_2]:
                     variable_score = 0
                     distance = 0
                     if len(line_extension) + len(line) < 5:
-                        variable_score -= default_score
+                        variable_score -= 2 * default_score
                     if len(line) == 3 and len(line_extension_1) > 0 and len(line_extension_2) > 0:
                         variable_score += 5 * default_score
                     counter = 0
@@ -95,8 +120,11 @@ class AI:
                             counter += 1
                     if counter + len(line) == 4:
                         variable_score += 5 * default_score
+                        win_in = 1
                     elif counter + len(line) == 3:
                         variable_score += 2 * default_score
+                        if win_in > 2:
+                            win_in = 2
                     for x, y in line_extension:
                         self.score_grid[x][y] += default_score * (len(line) - distance) + variable_score
                         distance += 1
@@ -113,25 +141,7 @@ class AI:
                 if x < self.grid_size and y < self.grid_size:
                     if self.score_grid[x][y] < 2 * default_score:
                         self.score_grid[x][y] += default_score
-
-        top_score = [0]
-        for column in range(0, self.grid_size):
-            for row in range(0, self.grid_size):
-                x, y = column, row
-                cell_value = self.score_grid[x][y]
-                if [x, y] in self.my_moves or [x, y] in self.rival_moves:
-                    cell_value = 0
-                    self.test.insert_score(cell_value, x, y)
-                if cell_value > top_score[0]:
-                    top_score = [cell_value, [x, y]]
-                    self.test.insert_score(cell_value, x, y)
-                elif cell_value == top_score[0]:
-                    top_score.append([x, y])
-                    self.test.insert_score(cell_value, x, y)
-                else:                                           #test
-                    self.test.insert_score(cell_value, x, y)    #test
-        cell_index = randint(1, len(top_score) - 1)
-        return top_score[cell_index]
+        return win_in
 
     def check_around(self, center_cell):
         cells_around = {}
@@ -142,7 +152,7 @@ class AI:
         return cells_around
 
     def within_grid(self, cell):
-        if cell[0] < self.grid_size and cell[1] < self.grid_size:
+        if cell[0] in range(0, self.grid_size) and cell[1] in range(0, self.grid_size):
             return True
         else:
             return False
