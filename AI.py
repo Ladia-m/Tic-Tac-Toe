@@ -59,12 +59,10 @@ class AI:
         default_score = 10
         rival_lines = []
         rival_singles = []
-        direction_1 = None
-        direction_2 = None
-        win_in = 5
+        defeat_in = 5
         for cell in self.rival_moves:
             center_cell = cell
-            around = self.check_around(center_cell)
+            around = self.check_around(center_cell, 'rival')
             if len(around) > 0:
                 for i in range(0, 4):
                     if self.directions[i] in around or self.directions[i + 4] in around:
@@ -89,14 +87,23 @@ class AI:
                             rival_lines.append(line)
             else:
                 rival_singles.append(center_cell)
-        for i in rival_singles:
+        for cell in rival_singles:
             for direction in self.directions:
-                x, y = self.cellxy(i, direction, 1)
+                x, y = self.cellxy(cell, direction, 1)
                 if x < self.grid_size and y < self.grid_size:
                     if ([x, y] not in self.my_moves) and (self.within_grid([x, y])):
-                        if win_in > 4:
-                            win_in = 4
+                        if defeat_in > 4:
+                            defeat_in = 4
                         self.score_grid[x][y] += default_score
+                        # if there are rival singles in 2 cells distance, add extra score
+                        line = self.cells_on_line('empty&rival', direction, [x, y], 4, True)
+                        if len(line) == 4 and line[1] in self.rival_moves:
+                            if self.score_grid[x][y] < 2 * default_score:
+                                self.score_grid[x][y] += default_score
+                            if defeat_in > 3:
+                                defeat_in = 3
+                        # maybe create case for three singles situation X_X_X here
+        # where the magic happens:
         for line in rival_lines:
             direction_1 = self.check_direction(line[-1], line[0])
             x, y = self.cellxy(line[0], direction_1, 1)
@@ -105,34 +112,37 @@ class AI:
             x, y = self.cellxy(line[-1], direction_2, 1)
             line_extension_2 = self.cells_on_line('empty&rival', direction_2, [x, y], 5 - len(line), True)
             if len(line_extension_1) + len(line_extension_2) + len(line) >= 5:
-                if win_in > 5 - len(line):
-                    win_in = len(line)
                 for line_extension in [line_extension_1, line_extension_2]:
+                    if len(line_extension) == 0:
+                        continue
                     variable_score = 0
                     distance = 0
+                    if len(line_extension_1) + len(line) < 5 or len(line_extension_2) + len(line) < 5:
+                        variable_score -= default_score
                     if len(line_extension) + len(line) < 5:
-                        variable_score -= 2 * default_score
+                        variable_score -= default_score
                     if len(line) == 3 and len(line_extension_1) > 0 and len(line_extension_2) > 0:
+                        variable_score += 4 * default_score
+                    if len(line) == 4:
                         variable_score += 5 * default_score
                     counter = 0
                     for cell in line_extension:
                         if cell in self.rival_moves:
                             counter += 1
-                    if counter + len(line) == 4:
-                        variable_score += 5 * default_score
-                        win_in = 1
-                    elif counter + len(line) == 3:
-                        variable_score += 2 * default_score
-                        if win_in > 2:
-                            win_in = 2
+                    if len(line_extension) > 1 and line_extension[1] in self.rival_moves:
+                            x, y = line_extension[0]
+                            self.score_grid[x][y] += (len(line) + counter) * default_score
                     for x, y in line_extension:
-                        self.score_grid[x][y] += default_score * (len(line) - distance) + variable_score
+                        self.score_grid[x][y] += default_score * (len(line) - distance + 1) + variable_score
+                        if self.score_grid[x][y] < 0:
+                            self.score_grid[x][y] = 0
                         distance += 1
+                    if defeat_in > 5 - len(line) - counter:
+                        defeat_in = 5 - len(line) - counter
+        # Add some basic score around rival lines:
         for line in rival_lines:
             cells_around = []
             for direction in self.directions:
-                if direction in [direction_1, direction_2]:
-                    continue
                 for cell in line:
                     x, y = self.cellxy(cell, direction, 1)
                     if [x, y] not in cells_around:
@@ -141,13 +151,58 @@ class AI:
                 if x < self.grid_size and y < self.grid_size:
                     if self.score_grid[x][y] < 2 * default_score:
                         self.score_grid[x][y] += default_score
-        return win_in
+            # if two parallel lines with 1 cell gap, add extra score between them
+            for direction in self.directions:
+                for cell in line:
+                    chkline = self.cells_on_line('empty&rival', direction, cell, 5, True)
+                    if len(chkline) == 5 and chkline[1] not in self.rival_moves and chkline[2] in self.rival_moves:
+                        x, y = chkline[1]
+                        if self.score_grid[x][y] < 3 * default_score:
+                            self.score_grid[x][y] = 3 * default_score
+        return defeat_in
 
-    def check_around(self, center_cell):
+    def set_offense_score(self, defeat_in):
+        win_in = 5
+        default_score = 5
+        my_lines = []
+        my_singles = []
+        for cell in self.my_moves:
+            center_cell = cell
+            around = self.check_around(center_cell, 'me')
+            if len(around) > 0:
+                for i in range(0, 4):
+                    if self.directions[i] in around or self.directions[i + 4] in around:
+                        line = [center_cell]
+                        no_break1 = True
+                        no_break2 = True
+                        distance = 1
+                        while no_break1 or no_break2:
+                            one_side = self.cellxy(center_cell, self.directions[i], distance)
+                            other_side = self.cellxy(center_cell, self.directions[i + 4], distance)
+                            if (one_side in self.my_moves) and no_break1:
+                                line.append(one_side)
+                            else:
+                                no_break1 = False
+                            if (other_side in self.my_moves) and no_break2:
+                                line.append(other_side)
+                            else:
+                                no_break2 = False
+                            distance += 1
+                        line = self.sorter(line)
+                        if line not in my_lines:
+                            my_lines.append(line)
+            else:
+                my_singles.append(center_cell)
+
+
+
+    def check_around(self, center_cell, competitor):
         cells_around = {}
         for direction in self.directions:
             coordinates = self.cellxy(center_cell, direction, 1)
-            if coordinates in self.rival_moves:
+            if coordinates in self.rival_moves and competitor == 'rival':
+                cells_around[direction] = coordinates
+            elif coordinates in self.my_moves and competitor == 'me':
                 cells_around[direction] = coordinates
         return cells_around
 
