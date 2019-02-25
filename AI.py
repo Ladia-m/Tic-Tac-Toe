@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from random import randint
-import test_gui
+#import test_gui
 
 
 class AI:
@@ -16,7 +16,7 @@ class AI:
             for row in range(0, self.grid_size):
                 rows.append(0)   # 0 = empty; 1 = rival; 2 = this AI
             self.play_grid.append(rows)
-        self.test = test_gui.TestGrid(grid_size) #test purpose
+#        self.test = test_gui.TestGrid(grid_size) #test purpose
 
     def play(self, coordinates=None):
         self.score_grid = []
@@ -42,19 +42,19 @@ class AI:
                     cell_value = self.score_grid[x][y]
                     if [x, y] in self.my_moves or [x, y] in self.rival_moves:
                         cell_value = 0
-                        self.test.insert_score(cell_value, x, y)
+#                        self.test.insert_score(cell_value, x, y)
                     if cell_value > top_score[0]:
                         top_score = [cell_value, [x, y]]
-                        self.test.insert_score(cell_value, x, y)
+#                        self.test.insert_score(cell_value, x, y)
                     elif cell_value == top_score[0]:
                         top_score.append([x, y])
-                        self.test.insert_score(cell_value, x, y)
-                    else:  # test
-                        self.test.insert_score(cell_value, x, y)  # test
+#                        self.test.insert_score(cell_value, x, y)
+#                    else:  # test
+#                        self.test.insert_score(cell_value, x, y)  # test
             x, y = top_score[randint(1, len(top_score) - 1)]
         self.play_grid[x][y] = 2
         self.my_moves.append([x, y])
-        self.test.show_sb()
+#        self.test.show_sb()
         return x, y
 
     def set_defense_score(self):
