@@ -3,7 +3,7 @@ from random import randint
 #import test_gui
 
 
-class AI:
+class BOT:
     def __init__(self, grid_size):
         self.grid_size = grid_size
         self.play_grid = []
@@ -14,7 +14,7 @@ class AI:
         for column in range(0, self.grid_size):
             rows = []
             for row in range(0, self.grid_size):
-                rows.append(0)   # 0 = empty; 1 = rival; 2 = this AI
+                rows.append(0)   # 0 = empty; 1 = rival; 2 = this BOT
             self.play_grid.append(rows)
 #        self.test = test_gui.TestGrid(grid_size) #test purpose
 
