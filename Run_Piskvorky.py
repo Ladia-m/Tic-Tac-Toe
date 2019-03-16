@@ -114,9 +114,9 @@ class GameController:
     def end_game_test(self):
         for player_cells in self.playerx_cells, self.playero_cells:
             if player_cells == self.playerx_cells:
-                player = 'X'
+                player = self.player_names[2]
             else:
-                player = 'O'
+                player = self.player_names[1]
             if len(player_cells) >= 5:
                 for position in player_cells:
                     finish_position = [position[0] + 4, position[1]]
@@ -159,9 +159,9 @@ class GameController:
         line_finish_y = finish_position[1] * self.cell_size + self.cell_size // 2
         self.canvas.create_line(line_start_x, line_start_y, line_finish_x, line_finish_y,
                                 width=5, fill='#000000')
-        messagebox.showwarning(message='Player {} WON!!!'.format(player))
-        self.top_infotable.configure(text='Player {} won!'.format(player))
-        self.bottom_infotable.configure(text='Player {} won!'.format(player))
+        messagebox.showwarning(message='{} WON!!!'.format(player))
+        self.top_infotable.configure(text='{} won!'.format(player))
+        self.bottom_infotable.configure(text='{} won!'.format(player))
         self.game_over = True
 
 
