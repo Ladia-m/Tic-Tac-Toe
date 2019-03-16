@@ -5,7 +5,7 @@ from tkinter import messagebox
 from string import ascii_uppercase
 from random import randint
 import sys
-from AI import AI
+from BOT import BOT
 
 
 class GameController:
@@ -22,22 +22,22 @@ class GameController:
         self.playGrid = []  # circle = 1, cross = 2, empty = 0
         self.playero_cells = []
         self.playerx_cells = []
-        self.ai_switch = 0
+        self.bot_switch = 0
         self.game_over = False
 
 
-    def play_grid_init(self, grid_size, ai_switch):
+    def play_grid_init(self, grid_size, bot_switch):
         self.grid_size = grid_size
         for row in range(0, self.grid_size):
             columns = []
             for column in range(0, self.grid_size):
                 columns.append(0)
             self.playGrid.append(columns)
-        self.ai_switch = ai_switch
-        if self.ai_switch == 1:
-            self.AI = AI(self.grid_size)
-            if self.player_names[self.player_on_move] == 'AI':
-                self.run_ai()
+        self.bot_switch = bot_switch
+        if self.bot_switch == 1:
+            self.BOT = BOT(self.grid_size)
+            if self.player_names[self.player_on_move] == 'PC':
+                self.run_bot()
 
     def play_grid_click(self, event):
         valid_move = True
@@ -46,11 +46,11 @@ class GameController:
             y = y // self.cell_size
             x = x // self.cell_size
             valid_move = self.next_turn(x, y)
-        if self.ai_switch == 1 and valid_move and not self.game_over:
-            self.run_ai([x, y])
+        if self.bot_switch == 1 and valid_move and not self.game_over:
+            self.run_bot([x, y])
 
-    def run_ai(self, coordinates=None):
-        x, y = self.AI.play(coordinates)
+    def run_bot(self, coordinates=None):
+        x, y = self.BOT.play(coordinates)
         self.next_turn(x, y)
 
     def next_turn(self, x, y):
@@ -176,8 +176,8 @@ class MainWindow(Frame):
         self.grid_size = None
         self.abc = ascii_uppercase
         self.active_window = 'init'
-        self.ai_switch = IntVar()
-        self.ai_switch.set(0)
+        self.bot_switch = IntVar()
+        self.bot_switch.set(0)
 
         self.init_frame = Frame(self.master)
         self.init_frame.grid()
@@ -256,14 +256,14 @@ class MainWindow(Frame):
         self.entry1.grid(row=3, column=1)
         self.entry1.focus()
         self.entry1.bind('<Return>', lambda e: entry_button.config(self.start_game()))
-        ai_choice_frame = Frame(self.init_frame)
-        ai_label = Label(ai_choice_frame, text='AI ON/OFF:')
-        ai_label.grid(row=0, column=0)
-        ai_on_choice = Radiobutton(ai_choice_frame, text='ON', variable=self.ai_switch, value=1, command=self.set_ai_name)
-        ai_on_choice.grid(row=0, column=1)
-        ai_off_choice = Radiobutton(ai_choice_frame, text='OFF', variable=self.ai_switch, value=0, command=self.set_ai_name)
-        ai_off_choice.grid(row=0, column=2)
-        ai_choice_frame.grid(row=4, column=1, pady=10)
+        bot_choice_frame = Frame(self.init_frame)
+        bot_label = Label(bot_choice_frame, text='Player vs PC:')
+        bot_label.grid(row=0, column=0)
+        bot_on_choice = Radiobutton(bot_choice_frame, text='ON', variable=self.bot_switch, value=1, command=self.set_bot_name)
+        bot_on_choice.grid(row=0, column=1)
+        bot_off_choice = Radiobutton(bot_choice_frame, text='OFF', variable=self.bot_switch, value=0, command=self.set_bot_name)
+        bot_off_choice.grid(row=0, column=2)
+        bot_choice_frame.grid(row=4, column=1, pady=10)
 
         self.confirm_img = PhotoImage(file='data/gifs/ok.gif')
         entry_button = Button(self.init_frame,
@@ -271,8 +271,8 @@ class MainWindow(Frame):
         entry_button.config(image=self.confirm_img, compound='left')
         entry_button.grid(row=5, column=1, pady=10)
 
-    def set_ai_name(self):
-        on_off = self.ai_switch.get()
+    def set_bot_name(self):
+        on_off = self.bot_switch.get()
         player1_entry = self.player1_entry.get()
         player2_entry = self.player2_entry.get()
         player1 = self.controller.player_names[1]
@@ -281,22 +281,22 @@ class MainWindow(Frame):
             if player1_entry != player1 or player2_entry != player2:
                 if player1_entry == player1:
                     self.player1_entry.delete(0, END)
-                    self.player1_entry.insert(0, 'AI')
+                    self.player1_entry.insert(0, 'PC')
                 else:
                     self.player2_entry.delete(0, END)
-                    self.player2_entry.insert(0, 'AI')
+                    self.player2_entry.insert(0, 'PC')
             else:
                 if randint(1, 2) == 1:
                     self.player1_entry.delete(0, END)
-                    self.player1_entry.insert(0, 'AI')
+                    self.player1_entry.insert(0, 'PC')
                 else:
                     self.player2_entry.delete(0, END)
-                    self.player2_entry.insert(0, 'AI')
+                    self.player2_entry.insert(0, 'PC')
         else:
-            if self.player1_entry.get() == 'AI':
+            if self.player1_entry.get() == 'PC':
                 self.player1_entry.delete(0, END)
                 self.player1_entry.insert(0, player1)
-            if self.player2_entry.get() == 'AI':
+            if self.player2_entry.get() == 'PC':
                 self.player2_entry.delete(0, END)
                 self.player2_entry.insert(0, player2)
 
@@ -314,7 +314,7 @@ class MainWindow(Frame):
         self.controller.player_names[1] = self.player1_entry.get()
         self.controller.player_names[2] = self.player2_entry.get()
         self.game_window()
-        self.controller.play_grid_init(self.grid_size, self.ai_switch.get())
+        self.controller.play_grid_init(self.grid_size, self.bot_switch.get())
         self.change_window()
 
     def game_window(self):
